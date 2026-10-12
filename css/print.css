@@ -1,0 +1,8 @@
+@page { size: 16in 9in; margin: 0; }
+html[data-theme] { color-scheme: dark; --bg: #07111f; --bg-deep: #030812; --text: #f3f8fc; --muted: #a7b7c8; --cyan: #48d7e6; --cyan-soft: #9debf2; --line: rgba(158,189,218,.18); --line-strong: rgba(158,220,255,.36); }
+html, body { width: auto; height: auto; overflow: visible; background: #07111f !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+.ambient, .topbar, .deck-controls, dialog, .image-frame__zoom, .play-button { display: none !important; }
+.app-shell, .deck { display: block; height: auto; overflow: visible; }
+.slide, .slide.is-active { position: relative; display: block !important; width: 16in; height: 9in; overflow: hidden; break-after: page; padding: .55in .72in; animation: none; }
+.slide-number { position: absolute; right: .45in; bottom: .4in; }
+.audio-progress { border: 1px solid rgba(255,255,255,.15); }

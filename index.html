@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Presentación didáctica e interactiva sobre Deep Clustering aplicado a Spanish-2Mix.">
+  <meta name="theme-color" id="theme-color" content="#07111f">
+  <title>Deep Clustering · Presentación didáctica</title>
+  <link rel="icon" href="data:,">
+  <script>
+    try {
+      const savedTheme = localStorage.getItem("deep-clustering-theme");
+      const preferredTheme = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+      document.documentElement.dataset.theme = savedTheme || preferredTheme;
+    } catch (_) {}
+  </script>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+  <script src="js/data.js" defer></script>
+  <script src="js/presentation.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#deck">Saltar a la presentación</a>
+
+  <div class="ambient" aria-hidden="true">
+    <span class="ambient__orb ambient__orb--one"></span>
+    <span class="ambient__orb ambient__orb--two"></span>
+    <span class="ambient__grid"></span>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar" aria-label="Cabecera de la presentación">
+      <a class="brand" href="#slide-1" aria-label="Ir al inicio">
+        <span class="brand__mark" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span><strong>Deep Clustering</strong><small>Spanish-2Mix</small></span>
+      </a>
+      <div class="topbar__meta">
+        <span id="section-label">Introducción</span>
+        <button class="icon-button" id="theme-button" type="button" aria-label="Cambiar a tema claro" aria-pressed="false" title="Alternar tema claro y oscuro">☀</button>
+        <button class="icon-button" id="help-button" type="button" aria-label="Mostrar ayuda de navegación" title="Ayuda">?</button>
+        <button class="icon-button" id="fullscreen-button" type="button" aria-label="Activar pantalla completa" title="Pantalla completa">⛶</button>
+      </div>
+    </header>
+
+    <main id="deck" class="deck" aria-live="polite">
+      <section class="slide slide--cover is-active" id="slide-1" data-section="Introducción" aria-labelledby="title-1">
+        <div class="cover-copy">
+          <p class="eyebrow"><span></span>Caso de Estudio 1</p>
+          <h1 id="title-1">Aprendizaje de<br><em>representaciones acústicas</em></h1>
+          <p class="cover-subtitle">Agrupación y reconstrucción de sonido mediante Deep Clustering</p>
+          <p class="lead">Separación monofónica de dos hablantes sobre el dataset Spanish-2Mix, explicada desde la señal temporal hasta la evaluación SI-SDR.</p>
+          <p class="author-line"><span>Presentado por</span><strong>Milton Alejandro Villarroel Garvizu</strong></p>
+          <div class="cover-actions">
+            <button class="primary-button" type="button" data-go="next">Comenzar <span aria-hidden="true">→</span></button>
+            <span class="duration">39 diapositivas · 45–50 min</span>
+          </div>
+        </div>
+        <div class="cover-visual" aria-hidden="true">
+          <div class="spectral-orbit spectral-orbit--outer"></div>
+          <div class="spectral-orbit spectral-orbit--inner"></div>
+          <div class="embedding-cloud">
+            <span class="dot dot--cyan d1"></span><span class="dot dot--cyan d2"></span><span class="dot dot--cyan d3"></span><span class="dot dot--cyan d4"></span><span class="dot dot--cyan d5"></span>
+            <span class="dot dot--coral d6"></span><span class="dot dot--coral d7"></span><span class="dot dot--coral d8"></span><span class="dot dot--coral d9"></span><span class="dot dot--coral d10"></span>
+            <span class="embedding-label">espacio de embeddings</span>
+          </div>
+          <div class="wave-ring"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+        </div>
+        <p class="slide-number" aria-hidden="true">01</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-objectives" data-section="Introducción" aria-labelledby="title-objectives">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Objetivos del caso de estudio</p>
+          <h2 id="title-objectives">Construir, separar, evaluar y explicar</h2>
+          <p>La implementación no se limita a entrenar una red: integra datos reproducibles, representación acústica, agrupamiento y evaluación.</p>
+        </div>
+        <div class="objective-grid animated-sequence" id="objectives-sequence">
+          <article class="sequence-step" style="--delay:.05s"><span>01</span><strong>Dataset propio</strong><p>Construir Spanish-2Mix con dos voces, SNR controlada y partición por hablante.</p></article>
+          <article class="sequence-step" style="--delay:.2s"><span>02</span><strong>Representaciones</strong><p>Generar un embedding discriminativo para cada bin tiempo-frecuencia mediante BLSTM.</p></article>
+          <article class="sequence-step" style="--delay:.35s"><span>03</span><strong>Separación</strong><p>Agrupar embeddings con K-means, crear máscaras binarias y reconstruir con ISTFT.</p></article>
+          <article class="sequence-step" style="--delay:.5s"><span>04</span><strong>Evaluación</strong><p>Medir SI-SDR, porcentaje de bins correctos, variabilidad y relación clustering-separación.</p></article>
+        </div>
+        <aside class="takeaway"><span>Pregunta guía</span><p>¿Puede Deep Clustering separar voces no vistas usando un dataset sintético propio de menor escala?</p></aside>
+        <div class="teaching-footer"><p>Objetivo general: evaluar la separación monofónica de dos hablantes con una BLSTM entrenada sobre datos de construcción propia.</p><button class="replay-button" type="button" data-replay="#objectives-sequence">↻ Repetir objetivos</button></div>
+        <p class="slide-number" aria-hidden="true">02</p>
+      </section>
+
+      <section class="slide" id="slide-2" data-section="El problema" aria-labelledby="title-2">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Primero, escucha</p>
+          <h2 id="title-2">Dos voces ocupan la misma señal</h2>
+          <p>Una única forma de onda contiene información de ambos hablantes. A simple vista no existe una frontera que permita separarlos.</p>
+        </div>
+        <div class="media-stage">
+          <button class="image-frame image-frame--hero" type="button" data-lightbox="assets/img/caso-mix.png" aria-label="Ampliar espectrograma de la mezcla">
+            <img src="assets/img/caso-mix.png" alt="Espectrograma de la mezcla VA_2MIX_013905, con energía de dos hablantes superpuesta en tiempo y frecuencia.">
+            <span class="image-frame__tag">VA_2MIX_013905 · mezcla</span>
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="listening-panel">
+            <p class="micro-label">Audio de entrada</p>
+            <h3>Mezcla original</h3>
+            <p>8,56 segundos · mono · 8 kHz</p>
+            <div class="audio-player" data-audio-player>
+              <button class="play-button" type="button" aria-label="Reproducir mezcla">▶</button>
+              <div class="audio-progress" role="slider" aria-label="Posición del audio" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div>
+              <time>0:00</time>
+              <audio preload="metadata" src="assets/audio/caso-mix.wav"></audio>
+            </div>
+            <blockquote>¿Puedes seguir una voz sin perder la otra?</blockquote>
+          </div>
+        </div>
+        <p class="slide-number" aria-hidden="true">02</p>
+      </section>
+
+      <section class="slide" id="slide-background" data-section="Antecedentes" aria-labelledby="title-background">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Antecedente metodológico</p>
+          <h2 id="title-background">Deep Clustering aprende una partición sin fijar identidades</h2>
+          <p>La propuesta de Hershey et al. convierte cada bin del espectrograma en un vector y aprende afinidades que pueden decodificarse mediante clustering.</p>
+        </div>
+        <div class="background-layout">
+          <article class="paper-card">
+            <p class="micro-label">Trabajo de referencia</p>
+            <strong>Deep Clustering: Discriminative Embeddings for Segmentation and Separation</strong>
+            <p>J. R. Hershey, Z. Chen, J. Le Roux y S. Watanabe · ICASSP 2016</p>
+            <div class="doi-line">DOI 10.1109/ICASSP.2016.7471631</div>
+          </article>
+          <div class="replica-bridge" aria-label="Relación entre el trabajo original y el caso de estudio">
+            <article><span>Original</span><strong>WSJ0-2mix</strong><p>2 BLSTM · embeddings · K-means · máscaras binarias</p></article>
+            <i aria-hidden="true">→</i>
+            <article><span>Réplica adaptada</span><strong>Spanish-2Mix</strong><p>Mismo flujo base; dataset propio, RMSprop y evaluación SI-SDR.</p></article>
+          </div>
+        </div>
+        <aside class="takeaway"><span>Alcance</span><p>Es una réplica metodológica adaptada, no una reproducción idéntica de todos los datos, optimizadores y métricas.</p></aside>
+        <p class="slide-number" aria-hidden="true">04</p>
+      </section>
+
+      <section class="slide" id="slide-3" data-section="Mapa del método" aria-labelledby="title-3">
+        <div class="slide-heading slide-heading--center">
+          <p class="eyebrow"><span></span>La idea completa en una vista</p>
+          <h2 id="title-3">Del sonido mezclado a dos fuentes</h2>
+          <p>La red no produce audio directamente. Aprende una geometría que luego puede agruparse.</p>
+        </div>
+        <div class="process-flow" aria-label="Flujo de separación con Deep Clustering">
+          <article class="process-step process-step--audio"><span class="step-index">01</span><div class="mini-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h3>Mezcla</h3><p>Señal temporal</p></article>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <article class="process-step"><span class="step-index">02</span><div class="mini-spectrum" aria-hidden="true"></div><h3>STFT</h3><p>Tiempo × frecuencia</p></article>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <article class="process-step process-step--violet"><span class="step-index">03</span><div class="mini-points" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div><h3>Embeddings</h3><p>Un vector por bin</p></article>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <article class="process-step process-step--split"><span class="step-index">04</span><div class="mini-clusters" aria-hidden="true"><i></i><i></i></div><h3>K-means</h3><p>Dos agrupaciones</p></article>
+          <span class="flow-arrow" aria-hidden="true">→</span>
+          <article class="process-step process-step--sources"><span class="step-index">05</span><div class="source-lines" aria-hidden="true"><i></i><i></i></div><h3>Fuentes</h3><p>ISTFT y reconstrucción</p></article>
+        </div>
+        <aside class="takeaway"><span>Idea clave</span><p>Separar significa decidir a qué fuente pertenece cada bin del espectrograma.</p></aside>
+        <p class="slide-number" aria-hidden="true">03</p>
+      </section>
+
+      <section class="slide" id="slide-4" data-section="Datos" aria-labelledby="title-4">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Dataset propio · sintético y reproducible</p>
+          <h2 id="title-4">Spanish-2Mix conserva las fuentes de cada mezcla</h2>
+          <p>Las utterances se sintetizaron mediante clonación de voz; la división por hablante permite evaluar identidades que el modelo nunca vio durante el entrenamiento.</p>
+        </div>
+        <div class="dataset-layout">
+          <div class="dataset-core" aria-label="Resumen del dataset">
+            <span class="core-ring core-ring--one"></span><span class="core-ring core-ring--two"></span>
+            <strong>20 787</strong><span>mezclas</span><small>45,01 horas</small>
+          </div>
+          <div class="dataset-stats">
+            <article><span>30</span><p>identidades de voz</p><small>15 masculinas · 15 femeninas</small></article>
+            <article><span>9 000</span><p>utterances</p><small>300 textos por voz</small></article>
+            <article><span>62 361</span><p>archivos de audio</p><small>tripletas mix, s1 y s2</small></article>
+          </div>
+          <div class="split-bar" aria-label="Distribución del dataset">
+            <button style="--size:66.89%" type="button"><strong>Train</strong><span>13 904 · 30 h</span></button>
+            <button style="--size:21.56%" type="button"><strong>Validación</strong><span>4 481 · 10 h</span></button>
+            <button style="--size:11.55%" type="button"><strong>Test</strong><span>2 402 · 5 h</span></button>
+          </div>
+        </div>
+        <p class="slide-number" aria-hidden="true">04</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-synthetic-dataset" data-section="Datos" aria-labelledby="title-synthetic-dataset">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Cómo se generó Spanish-2Mix</p>
+          <h2 id="title-synthetic-dataset">Una semilla de voz produce 300 utterances sintéticas</h2>
+          <p>Las grabaciones originales no son las mezclas finales: sirven para clonar cada identidad y sintetizar el mismo banco controlado de textos.</p>
+        </div>
+        <div class="tts-pipeline animated-sequence" id="tts-sequence">
+          <article class="sequence-step" style="--delay:.05s"><span>1 · Semilla humana</span><strong>30 voces</strong><p>15 M + 15 F · OGG → WAV mono, 24 kHz, PCM16</p><div class="seed-wave" aria-hidden="true"></div></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>control de calidad</small></span>
+          <article class="sequence-step" style="--delay:.3s"><span>2 · Voice prompt</span><strong>1 prompt .pt por voz</strong><p>Misma frase de referencia para reducir variabilidad textual.</p><div class="prompt-token" aria-hidden="true">M001.pt</div></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>Qwen3-TTS</small></span>
+          <article class="sequence-step" style="--delay:.55s"><span>3 · Síntesis</span><strong>300 textos × 30 voces</strong><p>Qwen/Qwen3-TTS-12Hz-0.6B-Base genera 9 000 utterances.</p><div class="utterance-stack" aria-hidden="true"><i></i><i></i><i></i></div></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>normalizar</small></span>
+          <article class="sequence-step" style="--delay:.8s"><span>4 · Salida</span><strong>mono · 8 kHz</strong><p>WAV PCM16 compatible con la configuración de Deep Clustering.</p><div class="sample-rate-chip">24 kHz → 8 kHz</div></article>
+        </div>
+        <div class="seed-register"><span>DATASET_SEED</span><strong>2026</strong><span>SPLIT_SEED</span><strong>2027</strong><span>MIXTURE_SEED</span><strong>2028</strong><span>SNR_SEED</span><strong>2029</strong></div>
+        <div class="teaching-footer"><p><strong>Reproducible:</strong> las semillas separan selección textual, partición, parejas de mezcla y SNR.</p><button class="replay-button" type="button" data-replay="#tts-sequence">↻ Repetir generación</button></div>
+        <p class="citation-line">Fuente metodológica TTS: Hu et al., <cite>Qwen3-TTS Technical Report</cite>, 2026.</p>
+        <p class="slide-number" aria-hidden="true">07</p>
+      </section>
+
+      <section class="slide" id="slide-project-structure" data-section="Datos" aria-labelledby="title-project-structure">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Organización reproducible del proyecto</p>
+          <h2 id="title-project-structure">Cada carpeta corresponde a una etapa verificable</h2>
+          <p>La estructura permite reanudar la síntesis, auditar metadatos y reconstruir cualquier mezcla sin confundir fuentes originales y resultados.</p>
+        </div>
+        <div class="project-structure">
+          <div class="tree-panel" aria-label="Estructura de carpetas de Spanish-2Mix">
+            <div><b>spanish_2mix/</b></div>
+            <div class="depth-1"><span>├─</span><b>voice_seeds/</b><em>grabaciones originales</em></div>
+            <div class="depth-1"><span>├─</span><b>voice_seeds_processed/</b><em>normalización y QC</em></div>
+            <div class="depth-1"><span>├─</span><b>texts/</b><em>500 frases; 300 seleccionadas</em></div>
+            <div class="depth-1"><span>├─</span><b>metadata/</b><em>voices, utterances y mixtures CSV</em></div>
+            <div class="depth-1"><span>├─</span><b>voice_prompts/</b><em>un .pt por identidad</em></div>
+            <div class="depth-1"><span>├─</span><b>sources_tts/</b><em>M_* y F_* · 9 000 utterances</em></div>
+            <div class="depth-1"><span>└─</span><b>mixtures_2mix/</b><em>dataset final</em></div>
+            <div class="depth-2"><span>├─</span><b>train/</b><em>mix/ · s1/ · s2/</em></div>
+            <div class="depth-2"><span>├─</span><b>validation/</b><em>mix/ · s1/ · s2/</em></div>
+            <div class="depth-2"><span>└─</span><b>test/</b><em>mix/ · s1/ · s2/</em></div>
+          </div>
+          <div class="structure-notes">
+            <article><span>01</span><div><strong>Incremental</strong><p>Cada utterance se registra al generarse; una interrupción no obliga a comenzar otra vez.</p></div></article>
+            <article><span>02</span><div><strong>Auditable</strong><p>RMS, pico, clipping, duración, texto, voz y modelo TTS quedan en metadatos.</p></div></article>
+            <article><span>03</span><div><strong>Supervisado</strong><p>Conservar mix, s1 y s2 permite construir etiquetas ideales y medir la separación.</p></div></article>
+          </div>
+        </div>
+        <p class="slide-number" aria-hidden="true">08</p>
+      </section>
+
+      <section class="slide" id="slide-5" data-section="Datos" aria-labelledby="title-5">
+        <div class="slide-heading slide-heading--center">
+          <p class="eyebrow"><span></span>Construcción controlada</p>
+          <h2 id="title-5">La SNR controla cuál voz predomina</h2>
+          <p>Las dos voces se recortan a la menor duración, se ajustan a una diferencia pseudoaleatoria de nivel y se suman sin perder las referencias.</p>
+        </div>
+        <div class="mix-equation">
+          <article class="signal-card signal-card--one"><span>s1</span><div class="signal-wave" aria-hidden="true"></div><p>Fuente 1</p></article>
+          <span class="operator" aria-hidden="true">＋</span>
+          <article class="signal-card signal-card--two"><span>αs2</span><div class="signal-wave signal-wave--alt" aria-hidden="true"></div><p>Fuente 2 escalada</p></article>
+          <span class="operator" aria-hidden="true">＝</span>
+          <article class="signal-card signal-card--mix"><span>mix</span><div class="signal-wave signal-wave--mix" aria-hidden="true"></div><p>Mezcla final</p></article>
+        </div>
+        <div class="formula-row formula-row--snr" aria-label="Fórmulas de magnitud SNR, factor de escala y mezcla">
+          <div class="formula-card"><span class="formula-label">Magnitud objetivo</span><div class="formula"><span>|SNR|</span><span>=</span><span>5u</span><small>u ∈ [0,1]</small></div></div>
+          <div class="formula-card"><span class="formula-label">Escala de s2</span><div class="formula"><span>α</span><span>=</span><span class="frac"><span>RMS(s<sub>1</sub>)</span><span>RMS(s<sub>2</sub>) · 10<sup>SNR/20</sup></span></span></div></div>
+          <div class="formula-card"><span class="formula-label">Mezcla</span><div class="formula"><span>x[n]</span><span>=</span><span>s<sub>1</sub>[n] + αs<sub>2</sub>[n]</span></div></div>
+        </div>
+        <div class="snr-scale">
+          <div><span>-5 dB</span><span>0 dB</span><span>+5 dB</span></div>
+          <div class="snr-line"><i></i></div>
+          <p><strong>SNR_SEED = 2029.</strong> El signo se elige aleatoriamente: positivo favorece s1; negativo favorece s2.</p>
+        </div>
+        <div class="mix-types"><span>M + M</span><span>F + F</span><span>M + F</span><small>distribución aproximada por tercios</small></div>
+        <p class="slide-number" aria-hidden="true">05</p>
+      </section>
+
+      <section class="slide" id="slide-6" data-section="Representación" aria-labelledby="title-6">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Representación tiempo-frecuencia</p>
+          <h2 id="title-6">La STFT convierte la señal en una rejilla</h2>
+        </div>
+        <div class="diagram-layout">
+          <button class="image-frame image-frame--diagram" type="button" data-lightbox="assets/img/stft-paso-a-paso.png" aria-label="Ampliar diagrama de extracción STFT">
+            <img src="assets/img/stft-paso-a-paso.png" alt="Diagrama paso a paso desde la señal temporal hasta la STFT, magnitud y transformación logarítmica.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="parameter-rail">
+            <article><strong>8 kHz</strong><span>muestreo</span></article>
+            <article><strong>32 ms</strong><span>ventana</span></article>
+            <article><strong>8 ms</strong><span>salto</span></article>
+            <article><strong>129</strong><span>bins</span></article>
+          </div>
+        </div>
+        <div class="formula-strip"><span>Entrada a la red</span><div class="formula formula--inline" aria-label="X entrada igual al logaritmo de la magnitud de X más epsilon"><span>X<sub>in</sub></span><span>=</span><span>log(|X| + 10<sup>−8</sup>)</span></div><p>La fase compleja se conserva para reconstruir el audio al final.</p></div>
+        <p class="slide-number" aria-hidden="true">06</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-stft-example" data-section="Representación" aria-labelledby="title-stft-example">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Ejemplo reducido · 4 frecuencias × 3 instantes</p>
+          <h2 id="title-stft-example">De números complejos a características para la red</h2>
+          <p>La fase se separa temporalmente de la magnitud. Después, el logaritmo comprime las diferencias entre valores pequeños y grandes.</p>
+        </div>
+        <div class="teaching-sequence animated-sequence stft-sequence" id="stft-sequence">
+          <article class="sequence-step" style="--delay:.05s">
+            <span class="sequence-kicker">1 · STFT compleja</span>
+            <div class="math-matrix math-matrix--4x3 math-matrix--complex" aria-label="Matriz compleja de cuatro por tres">
+              <i>1+j1</i><i>2+j0</i><i>1−j1</i><i>0+j2</i><i>1+j1</i><i>2+j2</i><i>3+j0</i><i>0+j1</i><i>1+j0</i><i>1+j0</i><i>2−j1</i><i>0+j2</i>
+            </div>
+            <p>Cada celda contiene amplitud y fase.</p>
+            <strong>X ∈ ℂ<sup>4×3</sup></strong>
+          </article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>|X|</small></span>
+          <article class="sequence-step" style="--delay:.45s">
+            <span class="sequence-kicker">2 · Magnitud</span>
+            <div class="math-matrix math-matrix--4x3 math-matrix--magnitude" aria-label="Matriz de magnitudes de cuatro por tres">
+              <i>1,41</i><i>2,00</i><i>1,41</i><i>2,00</i><i>1,41</i><i>2,83</i><i>3,00</i><i>1,00</i><i>1,00</i><i>1,00</i><i>2,24</i><i>2,00</i>
+            </div>
+            <p>|X| = √(Re(X)² + Im(X)²)</p>
+            <strong>|X| ∈ ℝ<sup>4×3</sup></strong>
+          </article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>log</small></span>
+          <article class="sequence-step" style="--delay:.85s">
+            <span class="sequence-kicker">3 · Compresión</span>
+            <div class="log-bars" aria-label="Comparación ilustrativa del rango antes y después del logaritmo"><i style="--v:100%"></i><i style="--v:47%"></i><i style="--v:78%"></i><i style="--v:33%"></i><b></b></div>
+            <p>X<sub>in</sub> = log(|X| + 10<sup>−8</sup>)</p>
+            <strong>entrada real</strong>
+          </article>
+        </div>
+        <div class="teaching-footer"><p><strong>Dimensiones:</strong> la transformación cambia el tipo de dato y su escala, pero conserva la rejilla 4 × 3.</p><button class="replay-button" type="button" data-replay="#stft-sequence">↻ Repetir transformación</button></div>
+        <p class="slide-number" aria-hidden="true">07</p>
+      </section>
+
+      <section class="slide" id="slide-7" data-section="Representación" aria-labelledby="title-7">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Secuencias de longitud fija</p>
+          <h2 id="title-7">Una mezcla se divide en segmentos de 0,8 segundos</h2>
+          <p>Esta es la forma de <strong>un solo audio</strong> antes de construir los lotes de entrenamiento. Solo su último segmento puede necesitar padding.</p>
+        </div>
+        <div class="segmentation-demo" aria-label="Segmentación del espectrograma">
+          <div class="timeline-ruler"><span>0 s</span><span>0,8 s</span><span>1,6 s</span><span>2,4 s</span><span>fin</span></div>
+          <div class="segments">
+            <article><strong>100</strong><span>frames</span></article>
+            <article><strong>100</strong><span>frames</span></article>
+            <article><strong>100</strong><span>frames</span></article>
+            <article class="segment--partial"><strong>31</strong><span>reales</span><i><b>69</b> padding</i></article>
+          </div>
+          <div class="tensor-caption"><span>S = 9 segmentos del audio</span><strong>X<sub>seg</sub> ∈ ℝ<sup>S × 100 × 129</sup></strong><span>ejemplo: 831 frames → S = 9</span></div>
+        </div>
+        <aside class="takeaway takeaway--right"><span>No confundir</span><p>S = 9 describe cuántos segmentos produjo esta mezcla. No es el batch size utilizado durante el entrenamiento.</p></aside>
+        <p class="slide-number" aria-hidden="true">07</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-padding-example" data-section="Representación" aria-labelledby="title-padding-example">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Ejemplo reducido · segmentación</p>
+          <h2 id="title-padding-example">Doce frames se convierten en tres bloques uniformes</h2>
+          <p>Para ilustrarlo, usamos segmentos ficticios de 5 frames y 4 bins. El último bloque recibe ceros para igualar su longitud.</p>
+        </div>
+        <div class="padding-demo animated-sequence" id="padding-sequence">
+          <div class="source-grid-wrap sequence-step" style="--delay:.05s"><span>X<sub>in</sub> ∈ ℝ<sup>12×4</sup></span><div class="source-grid" aria-label="Matriz de doce frames por cuatro bins"><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i><i>1</i><i>2</i><i>3</i><i>4</i></div><small>12 filas temporales</small></div>
+          <span class="sequence-arrow" aria-hidden="true">→<small>bloques de 5</small></span>
+          <div class="segment-cards">
+            <article class="segment-card sequence-step" style="--delay:.35s"><span>X₁</span><div class="block-grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>5 × 4</strong><small>frames 1–5</small></article>
+            <article class="segment-card sequence-step" style="--delay:.65s"><span>X₂</span><div class="block-grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><strong>5 × 4</strong><small>frames 6–10</small></article>
+            <article class="segment-card segment-card--padded sequence-step" style="--delay:.95s"><span>X₃</span><div class="block-grid"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i><i class="pad"></i></div><strong>5 × 4</strong><small>2 reales + 3 de padding</small></article>
+          </div>
+        </div>
+        <div class="dimension-result"><span>Antes</span><strong>[12, 4]</strong><i>→</i><span>Después</span><strong>[3, 5, 4]</strong><p>El padding uniforma el lote; no representa sonido real y se descarta posteriormente.</p></div>
+        <div class="teaching-footer"><p><strong>Caso real:</strong> [831, 129] → 9 segmentos de [100, 129]; el último contiene 31 frames reales y 69 de padding.</p><button class="replay-button" type="button" data-replay="#padding-sequence">↻ Repetir segmentación</button></div>
+        <p class="slide-number" aria-hidden="true">09</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-batch" data-section="Representación" aria-labelledby="title-batch">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Del segmento al mini-batch</p>
+          <h2 id="title-batch">El batch agrupa hasta 8 segmentos de forma idéntica</h2>
+          <p>Después de segmentar todas las mezclas, el cargador selecciona B segmentos. B es independiente de S, el número de segmentos que produjo cada audio.</p>
+        </div>
+        <div class="batch-explainer animated-sequence" id="batch-sequence">
+          <article class="audio-segments sequence-step" style="--delay:.05s"><span>Audio A</span><div><i>A₁</i><i>A₂</i><i>A₃</i><i>…</i><i>A₉</i></div><strong>S<sub>A</sub> = 9</strong></article>
+          <article class="audio-segments sequence-step" style="--delay:.2s"><span>Audio B</span><div><i>B₁</i><i>B₂</i><i>…</i><i>B₇</i></div><strong>S<sub>B</sub> = 7</strong></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>muestrear segmentos</small></span>
+          <article class="batch-stack sequence-step" style="--delay:.45s"><span>Mini-batch</span><div><i>A₃</i><i>B₁</i><i>A₈</i><i>B₆</i><i>⋮</i><i>hasta B=8</i></div><strong>X<sub>batch</sub> ∈ ℝ<sup>B×100×129</sup></strong></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>BLSTM</small></span>
+          <article class="batch-output sequence-step" style="--delay:.7s"><span>Salida del modelo</span><strong>V ∈ ℝ<sup>B×100×129×40</sup></strong><p>Cada segmento mantiene sus 100 frames y 129 bins; aparece una dimensión adicional de 40.</p></article>
+        </div>
+        <div class="batch-forms"><div><span>Entrada</span><strong>[B, 100, 129]</strong></div><i>→</i><div><span>Etiquetas</span><strong>[B, 100, 129, 2]</strong></div><i>+</i><div><span>Actividad</span><strong>[B, 100, 129]</strong></div></div>
+        <div class="teaching-footer"><p><strong>Entrenamiento:</strong> cada batch calcula una pérdida y actualiza los pesos; en este caso se usaron mini-batches de hasta 8 segmentos.</p><button class="replay-button" type="button" data-replay="#batch-sequence">↻ Repetir armado</button></div>
+        <p class="slide-number" aria-hidden="true">14</p>
+      </section>
+
+      <section class="slide" id="slide-8" data-section="Objetivos" aria-labelledby="title-8">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Supervisión sin identidad fija</p>
+          <h2 id="title-8">Entrada, pertenencia y actividad cumplen papeles distintos</h2>
+        </div>
+        <div class="diagram-layout diagram-layout--balanced">
+          <button class="image-frame image-frame--diagram" type="button" data-lightbox="assets/img/etiquetas-mascaras.png" aria-label="Ampliar diagrama de etiquetas y máscaras">
+            <img src="assets/img/etiquetas-mascaras.png" alt="Diagrama de construcción de etiquetas objetivo y máscara de actividad para Deep Clustering.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="concept-stack">
+            <article class="concept concept--x"><strong>X</strong><div><h3>Entrada</h3><p>Magnitud logarítmica de la mezcla</p></div><span>100 × 129</span></article>
+            <article class="concept concept--y"><strong>Y</strong><div><h3>Fuente dominante</h3><p>Etiqueta one-hot por bin</p></div><span>100 × 129 × 2</span></article>
+            <article class="concept concept--m"><strong>M</strong><div><h3>Bins válidos</h3><p>Actividad por encima de -40 dB</p></div><span>100 × 129</span></article>
+          </div>
+        </div>
+        <p class="slide-number" aria-hidden="true">08</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-label-example" data-section="Objetivos" aria-labelledby="title-label-example">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Ejemplo reducido · fuente dominante</p>
+          <h2 id="title-label-example">Las referencias convierten cada bin en una etiqueta</h2>
+          <p>Durante el entrenamiento conocemos s1 y s2. Se comparan sus magnitudes celda por celda, sin mezclar información entre posiciones.</p>
+        </div>
+        <div class="label-example animated-sequence" id="label-sequence">
+          <article class="source-matrix sequence-step" style="--delay:.05s"><span>|S₁|</span><div class="math-matrix math-matrix--3x4"><i>4</i><i>2</i><i>1</i><i>5</i><i>3</i><i>1</i><i>6</i><i>2</i><i>2</i><i>7</i><i>1</i><i>4</i></div><small>magnitud de la fuente 1</small></article>
+          <span class="compare-symbol" aria-hidden="true">vs.</span>
+          <article class="source-matrix source-matrix--two sequence-step" style="--delay:.3s"><span>|S₂|</span><div class="math-matrix math-matrix--3x4"><i>1</i><i>5</i><i>3</i><i>2</i><i>4</i><i>2</i><i>1</i><i>6</i><i>5</i><i>2</i><i>4</i><i>1</i></div><small>magnitud de la fuente 2</small></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>mayor valor</small></span>
+          <article class="source-matrix source-matrix--label sequence-step" style="--delay:.6s"><span>L</span><div class="math-matrix math-matrix--3x4"><i>0</i><i>1</i><i>1</i><i>0</i><i>1</i><i>1</i><i>0</i><i>1</i><i>1</i><i>0</i><i>1</i><i>0</i></div><small>0 domina s1 · 1 domina s2</small></article>
+        </div>
+        <div class="onehot-demo"><span>Primer frame</span><strong>[0, 1, 1, 0]</strong><i>→ one-hot →</i><div class="onehot-rows"><b>[1, 0]</b><b>[0, 1]</b><b>[0, 1]</b><b>[1, 0]</b></div><p>Una fila por bin, dos columnas para las dos fuentes.</p></div>
+        <div class="teaching-footer"><p><strong>Dimensión real:</strong> Y ∈ ℝ<sup>T×129×2</sup>; después de segmentar, Y<sub>s</sub> ∈ ℝ<sup>100×129×2</sup>.</p><button class="replay-button" type="button" data-replay="#label-sequence">↻ Repetir comparación</button></div>
+        <p class="slide-number" aria-hidden="true">12</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-lstm-vs-blstm" data-section="Modelo" aria-labelledby="title-lstm-vs-blstm">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Memoria temporal</p>
+          <h2 id="title-lstm-vs-blstm">LSTM mira al pasado; BLSTM también mira al futuro</h2>
+          <p>En separación offline, el segmento completo está disponible. Por eso cada frame puede usar contexto a ambos lados.</p>
+        </div>
+        <div class="recurrent-compare animated-sequence" id="recurrent-sequence">
+          <article class="recurrent-card sequence-step" style="--delay:.05s">
+            <div class="recurrent-title"><span>LSTM</span><strong>Unidireccional</strong></div>
+            <div class="time-nodes time-nodes--forward"><i>x₁</i><i>x₂</i><i class="focus">x₃</i><i>x₄</i><i>x₅</i><b></b></div>
+            <p>Para describir x₃ utiliza x₁, x₂ y el estado acumulado hasta el presente.</p>
+            <div class="context-chip">contexto disponible: pasado → presente</div>
+          </article>
+          <div class="versus-badge">VS</div>
+          <article class="recurrent-card recurrent-card--bi sequence-step" style="--delay:.35s">
+            <div class="recurrent-title"><span>BLSTM</span><strong>Bidireccional</strong></div>
+            <div class="time-nodes time-nodes--bi"><i>x₁</i><i>x₂</i><i class="focus">x₃</i><i>x₄</i><i>x₅</i><b class="forward"></b><b class="backward"></b></div>
+            <p>Para describir x₃ concatena información recorrida desde x₁ y desde x₅.</p>
+            <div class="context-chip">h<sub>t</sub> = [h⃗<sub>t</sub> ; h⃖<sub>t</sub>]</div>
+          </article>
+        </div>
+        <div class="why-blstm"><span>¿Por qué BLSTM aquí?</span><p>Los patrones de voz —formantes, armónicos y transiciones— se extienden en el tiempo. El futuro cercano ayuda a decidir a qué hablante pertenece un bin ambiguo.</p></div>
+        <div class="teaching-footer"><p><strong>Compromiso:</strong> BLSTM requiere el bloque completo; es adecuada para separación offline, pero no para streaming estrictamente causal.</p><button class="replay-button" type="button" data-replay="#recurrent-sequence">↻ Repetir comparación</button></div>
+        <p class="slide-number" aria-hidden="true">17</p>
+      </section>
+
+      <section class="slide" id="slide-9" data-section="Modelo" aria-labelledby="title-9">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Arquitectura BLSTM</p>
+          <h2 id="title-9">Cada bin termina representado por 40 números</h2>
+        </div>
+        <div class="architecture-stage">
+          <button class="image-frame image-frame--architecture" type="button" data-lightbox="assets/img/arquitectura-entrenamiento.png" aria-label="Ampliar arquitectura de Deep Clustering">
+            <img src="assets/img/arquitectura-entrenamiento.png" alt="Arquitectura de Deep Clustering con dos capas BLSTM, proyección, reshape, normalización y flatten.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="dimension-trail" aria-label="Dimensiones de la arquitectura">
+            <span>[100, 129]</span><i>→</i><span>[100, 600]</span><i>→</i><span>[100, 5160]</span><i>→</i><strong>[100, 129, 40]</strong>
+          </div>
+        </div>
+        <p class="architecture-note">Dos direcciones temporales permiten que cada frame use contexto anterior y posterior.</p>
+        <p class="slide-number" aria-hidden="true">09</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-blstm-dimensions" data-section="Modelo" aria-labelledby="title-blstm-dimensions">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Evolución dimensional · BLSTM</p>
+          <h2 id="title-blstm-dimensions">El tiempo se conserva; cambian las características</h2>
+          <p>Cada frame entra con 129 magnitudes. Las direcciones hacia adelante y hacia atrás producen 300 características cada una y se concatenan.</p>
+        </div>
+        <div class="dimension-machine animated-sequence" id="blstm-sequence">
+          <article class="tensor-card tensor-card--input sequence-step" style="--delay:.05s"><span>Entrada</span><strong>[100, 129]</strong><div class="tensor-axes"><i>100 frames</i><i>129 bins</i></div><p>x<sub>t</sub> ∈ ℝ<sup>129</sup></p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="blstm-card sequence-step" style="--delay:.35s"><span>BLSTM 1</span><div class="directions"><b>h⃗<sub>t</sub> ∈ ℝ<sup>300</sup></b><b>h⃖<sub>t</sub> ∈ ℝ<sup>300</sup></b></div><p>pasado + futuro</p><strong>[100, 600]</strong></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="blstm-card sequence-step" style="--delay:.7s"><span>BLSTM 2</span><div class="directions"><b>300 →</b><b>← 300</b></div><p>contexto más profundo</p><strong>[100, 600]</strong></article>
+        </div>
+        <div class="equation-band"><span>Concatenación</span><strong>h<sub>t</sub> = [h⃗<sub>t</sub> ; h⃖<sub>t</sub>] ∈ ℝ<sup>600</sup></strong><p>Los 100 pasos temporales siguen siendo 100. La red reemplaza las 129 magnitudes por 600 características contextuales.</p></div>
+        <div class="teaching-footer"><p><strong>Lectura de [100, 600]:</strong> 100 instantes, cada uno descrito por un vector contextual de 600 valores.</p><button class="replay-button" type="button" data-replay="#blstm-sequence">↻ Repetir transformación</button></div>
+        <p class="slide-number" aria-hidden="true">14</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-reshape" data-section="Modelo" aria-labelledby="title-reshape">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Proyección, reshape y normalización</p>
+          <h2 id="title-reshape">5 160 valores se reorganizan en 129 embeddings</h2>
+          <p>La proyección genera 129 × 40 valores por frame. Reshape no aprende ni calcula valores nuevos; cambia cómo se interpretan en memoria.</p>
+        </div>
+        <div class="reshape-story animated-sequence" id="reshape-sequence">
+          <div class="reshape-row reshape-row--top">
+            <article class="reshape-stage sequence-step" style="--delay:.05s"><span>1 · Contexto BLSTM</span><strong>[B, 100, 600]</strong><p>Por cada uno de los 100 frames existen 600 características contextuales.</p></article>
+            <span class="reshape-operation sequence-step" style="--delay:.2s"><b>Proyección aprendida</b><span>z = tanh(Wh + b)</span><i aria-hidden="true">→</i></span>
+            <article class="reshape-stage sequence-step" style="--delay:.35s"><span>2 · Vector proyectado</span><strong>[B, 100, 5160]</strong><p>La capa sí aprende: transforma 600 características en 5 160 valores.</p></article>
+          </div>
+          <div class="reshape-decomposition sequence-step" style="--delay:.5s">
+            <span class="formula-label">Dentro de cada frame</span>
+            <strong>5 160</strong><i>=</i><div class="embedding-groups"><b>40</b><b>40</b><b>40</b><em>…</em><b>40</b></div><i>×</i><strong>129 bins</strong>
+          </div>
+          <div class="reshape-row reshape-row--bottom">
+            <article class="reshape-stage sequence-step" style="--delay:.65s"><span>3 · Reshape</span><strong>[B, 100, 129, 40]</strong><p>No cambia valores: separa los 5 160 números en 129 grupos consecutivos de 40.</p></article>
+            <span class="reshape-operation sequence-step" style="--delay:.8s"><b>Normalización L2</b><span class="frac"><span>v<sub>t,f</sub></span><span>‖v<sub>t,f</sub>‖<sub>2</sub> + ε</span></span><i aria-hidden="true">→</i></span>
+            <article class="reshape-stage reshape-stage--result sequence-step" style="--delay:.95s"><span>4 · Embedding unitario</span><strong>‖v̂<sub>t,f</sub>‖<sub>2</sub> ≈ 1</strong><p>La afinidad compara dirección; un vector grande no domina solo por su escala.</p></article>
+          </div>
+        </div>
+        <div class="teaching-footer"><p><strong>Clave:</strong> 5160 = 129 frecuencias × 40 componentes. Cada grupo consecutivo de 40 corresponde a un bin.</p><button class="replay-button" type="button" data-replay="#reshape-sequence">↻ Repetir reorganización</button></div>
+        <p class="slide-number" aria-hidden="true">15</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-flatten" data-section="Modelo" aria-labelledby="title-flatten">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Aplanamiento parcial</p>
+          <h2 id="title-flatten">La rejilla se convierte en una lista de puntos</h2>
+          <p>Flatten combina tiempo y frecuencia, pero conserva intacta la dimensión 40 del embedding. Ningún vector se mezcla con otro.</p>
+        </div>
+        <div class="flatten-demo animated-sequence" id="flatten-sequence">
+          <article class="flatten-grid-side sequence-step" style="--delay:.05s"><span>Rejilla de embeddings</span><strong>[100, 129, 40]</strong><div class="embedding-grid-demo"><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i><i><b>v</b></i></div><small>Ejemplo visual: 3 tiempos × 4 frecuencias</small></article>
+          <div class="flatten-rule sequence-step" style="--delay:.35s"><span>n = t · F + f</span><strong>Flatten(t, f)</strong><i aria-hidden="true">→</i><p>Se recorren las celdas en un orden fijo.</p></div>
+          <article class="flatten-list-side sequence-step" style="--delay:.7s"><span>Lista de embeddings</span><strong>[12 900, 40]</strong><div class="embedding-list-demo"><i><b>v₁</b><em>40 componentes</em></i><i><b>v₂</b><em>40 componentes</em></i><i><b>v₃</b><em>40 componentes</em></i><i><b>v₄</b><em>40 componentes</em></i><i><b>⋮</b><em>⋮</em></i><i><b>v₁₂₉₀₀</b><em>40 componentes</em></i></div><small>Una fila por bin tiempo-frecuencia</small></article>
+        </div>
+        <div class="dimension-result dimension-result--wide"><span>100 × 129 posiciones</span><strong>= 12 900 filas</strong><i>·</i><span>40 componentes por fila</span><strong>V<sub>flat</sub> ∈ ℝ<sup>12900×40</sup></strong></div>
+        <div class="teaching-footer"><p><strong>No se aplana todo:</strong> convertir [100,129,40] en un único vector destruiría la identidad de cada bin. Solo se fusionan los ejes t y f.</p><button class="replay-button" type="button" data-replay="#flatten-sequence">↻ Repetir aplanamiento</button></div>
+        <p class="slide-number" aria-hidden="true">16</p>
+      </section>
+
+      <section class="slide" id="slide-10" data-section="Aprendizaje" aria-labelledby="title-10">
+        <div class="slide-heading slide-heading--center">
+          <p class="eyebrow"><span></span>Objetivo de Deep Clustering</p>
+          <h2 id="title-10">La red aprende relaciones entre pares de bins</h2>
+          <p>Una afinidad vale 1 cuando dos bins pertenecen a la misma fuente y 0 cuando pertenecen a fuentes distintas.</p>
+        </div>
+        <div class="affinity-demo">
+          <div class="matrix-group">
+            <h3>Afinidad ideal <span>YYᵀ</span></h3>
+            <div class="matrix matrix--ideal" aria-label="Matriz ideal de cuatro por cuatro"><i>1</i><i>1</i><i>0</i><i>0</i><i>1</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>1</i><i>0</i><i>0</i><i>1</i><i>1</i></div>
+            <p>Lo que deberían expresar los embeddings</p>
+          </div>
+          <div class="loss-symbol"><span>comparar</span><strong>‖ · ‖²<sub>F</sub></strong><small>pérdida</small></div>
+          <div class="matrix-group">
+            <h3>Afinidad estimada <span>VVᵀ</span></h3>
+            <div class="matrix matrix--estimated" aria-label="Matriz estimada de cuatro por cuatro"><i>1</i><i>.8</i><i>.2</i><i>.1</i><i>.8</i><i>1</i><i>.3</i><i>.1</i><i>.2</i><i>.3</i><i>1</i><i>.7</i><i>.1</i><i>.1</i><i>.7</i><i>1</i></div>
+            <p>Lo que produce la red en este paso</p>
+          </div>
+        </div>
+        <div class="loss-formula formula" aria-label="Pérdida de afinidad normalizada"><span>L</span><span>=</span><span class="frac"><span>‖V<sub>a</sub>V<sub>a</sub><sup>T</sup> − Y<sub>a</sub>Y<sub>a</sub><sup>T</sup>‖<sub>F</sub><sup>2</sup></span><span>N<sub>a</sub><sup>2</sup></span></span></div>
+        <aside class="takeaway"><span>Ventaja</span><p>La afinidad no depende de llamar “fuente 1” o “fuente 2” a cada grupo.</p></aside>
+        <p class="slide-number" aria-hidden="true">10</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-active-loss" data-section="Aprendizaje" aria-labelledby="title-active-loss">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>De todos los bins a una pérdida comparable</p>
+          <h2 id="title-active-loss">La máscara M decide qué relaciones cuentan</h2>
+          <p>Silencio y energía muy baja producen etiquetas poco informativas. Antes de comparar afinidades se conservan únicamente las filas activas de V e Y.</p>
+        </div>
+        <div class="loss-evolution animated-sequence" id="loss-evolution-sequence">
+          <article class="loss-evolution-step sequence-step" style="--delay:.05s"><span>1 · Aplanar</span><div class="shape-pair"><b>V</b><strong>[12 900, 40]</strong><b>Y</b><strong>[12 900, 2]</strong><b>M</b><strong>[12 900]</strong></div><p>Las filas n describen el mismo bin.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>M[n] = 1</small></span>
+          <article class="loss-evolution-step sequence-step" style="--delay:.3s"><span>2 · Filtrar</span><div class="shape-pair shape-pair--active"><b>V<sub>a</sub></b><strong>[N<sub>a</sub>, 40]</strong><b>Y<sub>a</sub></b><strong>[N<sub>a</sub>, 2]</strong></div><p>N<sub>a</sub> varía según la energía del segmento o batch.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>afinidades</small></span>
+          <article class="loss-evolution-step sequence-step" style="--delay:.55s"><span>3 · Comparar pares</span><div class="affinity-shapes"><b>V<sub>a</sub>V<sub>a</sub><sup>T</sup></b><i>vs.</i><b>Y<sub>a</sub>Y<sub>a</sub><sup>T</sup></b></div><strong>[N<sub>a</sub>, N<sub>a</sub>]</strong><p>Ambas matrices hablan de los mismos pares de bins activos.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>promedio</small></span>
+          <article class="loss-evolution-step loss-evolution-step--result sequence-step" style="--delay:.8s"><span>4 · Normalizar</span><div class="formula formula--loss"><span>L</span><span>=</span><span class="frac"><span>‖V<sub>a</sub>V<sub>a</sub><sup>T</sup> − Y<sub>a</sub>Y<sub>a</sub><sup>T</sup>‖<sub>F</sub><sup>2</sup></span><span>N<sub>a</sub><sup>2</sup></span></span></div><p>Promedio del error sobre las N<sub>a</sub><sup>2</sup> relaciones posibles.</p></article>
+        </div>
+        <div class="frobenius-reasons"><article><strong>¿Por qué Frobenius?</strong><p>Suma el error cuadrático de todas las celdas de la matriz de afinidad y es diferenciable.</p></article><article><strong>¿Por qué dividir por N<sub>a</sub><sup>2</sup>?</strong><p>Evita que un ejemplo con más bins activos produzca una pérdida mayor solo por tener más pares.</p></article></div>
+        <div class="teaching-footer"><p><strong>Lectura:</strong> L es el error cuadrático medio por relación activa, no el error por bin individual.</p><button class="replay-button" type="button" data-replay="#loss-evolution-sequence">↻ Repetir derivación</button></div>
+        <p class="citation-line">Objetivo de afinidad basado en Hershey et al., ICASSP 2016, DOI 10.1109/ICASSP.2016.7471631.</p>
+        <p class="slide-number" aria-hidden="true">23</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-loss-example" data-section="Aprendizaje" aria-labelledby="title-loss-example">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Ejemplo numérico · pérdida</p>
+          <h2 id="title-loss-example">Dos bins distintos producen una pérdida de 0,045</h2>
+          <p>El ejemplo muestra exactamente qué penaliza la norma de Frobenius cuando la red acerca embeddings que deberían estar separados.</p>
+        </div>
+        <div class="loss-walkthrough animated-sequence" id="loss-sequence">
+          <article class="loss-stage sequence-step" style="--delay:.05s"><span>1 · Ideal</span><strong>A* =</strong><div class="matrix matrix--2"><i>1</i><i>0</i><i>0</i><i>1</i></div><p>Los bins son de fuentes diferentes.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="loss-stage sequence-step" style="--delay:.3s"><span>2 · Estimada</span><strong>A =</strong><div class="matrix matrix--2 matrix--soft"><i>1</i><i>0,3</i><i>0,3</i><i>1</i></div><p>La red todavía les asigna similitud 0,3.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="loss-stage sequence-step" style="--delay:.55s"><span>3 · Diferencia</span><strong>A − A* =</strong><div class="matrix matrix--2 matrix--difference"><i>0</i><i>0,3</i><i>0,3</i><i>0</i></div><p>Solo quedan los errores fuera de la diagonal.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="loss-stage loss-stage--result sequence-step" style="--delay:.85s"><span>4 · Normalizar</span><p>0² + 0,3² + 0,3² + 0² = 0,18</p><strong>L = 0,18 / 2²</strong><b>0,045</b></article>
+        </div>
+        <div class="equation-band"><span>Interpretación</span><strong>L ↓</strong><p>Una pérdida menor significa que la geometría de los embeddings se aproxima mejor a la partición real de las fuentes.</p></div>
+        <div class="teaching-footer"><p>La diagonal siempre vale 1 porque cada bin es completamente afín consigo mismo.</p><button class="replay-button" type="button" data-replay="#loss-sequence">↻ Repetir cálculo</button></div>
+        <p class="slide-number" aria-hidden="true">18</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-efficient-loss" data-section="Aprendizaje" aria-labelledby="title-efficient-loss">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Cálculo eficiente</p>
+          <h2 id="title-efficient-loss">La misma pérdida evita matrices gigantes</h2>
+          <p>Construir A = VVᵀ directamente requeriría una matriz de hasta 12 900 × 12 900 por segmento. La forma expandida usa productos mucho menores.</p>
+        </div>
+        <div class="efficiency-contrast">
+          <article class="big-matrix-warning"><p class="micro-label">Forma conceptual</p><strong>12 900 × 12 900</strong><div class="pixel-matrix" aria-hidden="true"></div><p>≈ 166 millones de relaciones</p><small>Útil para entender la idea, costosa para calcularla.</small></article>
+          <div class="efficiency-arrow" aria-hidden="true"><span>misma L</span>→</div>
+          <article class="small-products"><p class="micro-label">Forma implementada</p><div><span>VᵀV</span><strong>40 × 40</strong></div><div><span>VᵀY</span><strong>40 × 2</strong></div><div><span>YᵀY</span><strong>2 × 2</strong></div><small>Con V<sub>a</sub> ∈ ℝ<sup>Na×40</sup> y Y<sub>a</sub> ∈ ℝ<sup>Na×2</sup>.</small></article>
+        </div>
+        <div class="efficient-formula formula" aria-label="Forma eficiente de la pérdida de Deep Clustering"><span>L</span><span>=</span><span class="frac"><span>‖V<sub>a</sub><sup>T</sup>V<sub>a</sub>‖<sub>F</sub><sup>2</sup> − 2‖V<sub>a</sub><sup>T</sup>Y<sub>a</sub>‖<sub>F</sub><sup>2</sup> + ‖Y<sub>a</sub><sup>T</sup>Y<sub>a</sub>‖<sub>F</sub><sup>2</sup></span><span>N<sub>a</sub><sup>2</sup></span></span></div>
+        <aside class="takeaway"><span>Resultado</span><p>El valor matemático no cambia; solo se reorganizan las multiplicaciones para reducir memoria y tiempo.</p></aside>
+        <p class="citation-line">Reescritura algebraica del objetivo de Deep Clustering: Hershey et al., ICASSP 2016.</p>
+        <p class="slide-number" aria-hidden="true">19</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-optimizer" data-section="Entrenamiento" aria-labelledby="title-optimizer">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>De la pérdida a nuevos pesos</p>
+          <h2 id="title-optimizer">RMSprop adapta el tamaño de cada actualización</h2>
+          <p>La pérdida define qué está mal; la retropropagación calcula gradientes y RMSprop usa un promedio móvil de sus cuadrados para estabilizar el paso.</p>
+        </div>
+        <div class="optimizer-flow animated-sequence" id="optimizer-sequence">
+          <article class="sequence-step" style="--delay:.05s"><span>1 · Mini-batch</span><strong>B ≤ 8 segmentos</strong><p>X<sub>b</sub>, Y<sub>b</sub> y M<sub>b</sub></p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="sequence-step" style="--delay:.25s"><span>2 · Loss</span><strong>L<sub>b</sub></strong><p>Error medio de afinidad sobre bins activos.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="sequence-step" style="--delay:.45s"><span>3 · Gradiente</span><strong>g<sub>t</sub> = ∇<sub>θ</sub>L<sub>b</sub></strong><p>Dirección local para reducir L.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→</span>
+          <article class="sequence-step" style="--delay:.65s"><span>4 · RMSprop</span><strong>θ<sub>t</sub> → θ<sub>t+1</sub></strong><p>Un paso adaptado por parámetro.</p></article>
+        </div>
+        <div class="optimizer-formulas">
+          <div class="formula-card"><span class="formula-label">Promedio móvil</span><div class="formula"><span>r<sub>t</sub></span><span>=</span><span>ρr<sub>t−1</sub> + (1−ρ)g<sub>t</sub><sup>2</sup></span></div></div>
+          <div class="formula-card"><span class="formula-label">Actualización</span><div class="formula"><span>θ<sub>t+1</sub></span><span>=</span><span>θ<sub>t</sub> − η</span><span class="frac"><span>g<sub>t</sub></span><span>√(r<sub>t</sub> + ε)</span></span></div></div>
+        </div>
+        <div class="epoch-vs-batch"><article><span>Cada batch</span><strong>calcula L<sub>b</sub> y actualiza θ</strong></article><i>≠</i><article><span>Fin de época</span><strong>promedia L<sub>1</sub>…L<sub>K</sub> para reportar</strong></article></div>
+        <div class="teaching-footer"><p><strong>No se retropropaga una pérdida gigante por época:</strong> los pesos cambian después de cada mini-batch.</p><button class="replay-button" type="button" data-replay="#optimizer-sequence">↻ Repetir optimización</button></div>
+        <p class="citation-line">RMSprop: Tieleman y Hinton, “Lecture 6.5 — Divide the gradient by a running average of its recent magnitude”, 2012.</p>
+        <p class="slide-number" aria-hidden="true">26</p>
+      </section>
+
+      <section class="slide" id="slide-11" data-section="Entrenamiento" aria-labelledby="title-11">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Optimización</p>
+          <h2 id="title-11">La validación mejora durante las 10 épocas</h2>
+          <p>Cada batch actualiza los pesos con RMSprop. El modelo elegido corresponde a la menor pérdida de validación.</p>
+        </div>
+        <div class="training-layout">
+          <button class="image-frame image-frame--chart" type="button" data-lightbox="assets/img/perdida-entrenamiento.png" aria-label="Ampliar gráfica de pérdida de entrenamiento">
+            <img src="assets/img/perdida-entrenamiento.png" alt="Curvas de pérdida de entrenamiento y validación durante diez épocas.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="training-summary">
+            <p class="micro-label">Mejor punto de control</p>
+            <strong>Época 10</strong>
+            <dl><div><dt>Train</dt><dd>0,171239</dd></div><div><dt>Validación</dt><dd>0,194220</dd></div><div><dt>Batch</dt><dd>hasta 8 segmentos</dd></div></dl>
+            <p>La brecha final es moderada. La selección se hace por validación, no por la última actualización.</p>
+          </div>
+        </div>
+        <p class="slide-number" aria-hidden="true">11</p>
+      </section>
+
+      <section class="slide" id="slide-12" data-section="Inferencia" aria-labelledby="title-12">
+        <div class="slide-heading slide-heading--center">
+          <p class="eyebrow"><span></span>Modelo con pesos fijos</p>
+          <h2 id="title-12">K-means transforma la geometría en dos máscaras</h2>
+          <p>Los embeddings de todos los segmentos se concatenan antes de agrupar el audio completo.</p>
+        </div>
+        <div class="inference-pipeline">
+          <article><span>01</span><strong>Embeddings</strong><p>T × 129 × 40</p><div class="cloud-mini cloud-mini--mixed" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <b aria-hidden="true">→</b>
+          <article><span>02</span><strong>Flatten</strong><p>(T · 129) × 40</p><div class="rows-mini" aria-hidden="true"><i></i><i></i><i></i><i></i></div></article>
+          <b aria-hidden="true">→</b>
+          <article><span>03</span><strong>K-means</strong><p>K = 2</p><div class="cloud-mini" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div></article>
+          <b aria-hidden="true">→</b>
+          <article><span>04</span><strong>Máscaras</strong><p>M₁ y M₂</p><div class="masks-mini" aria-hidden="true"><i></i><i></i></div></article>
+        </div>
+        <div class="permutation-note"><span>0 ≠ una identidad</span><p>Los números de cluster son arbitrarios. Antes de evaluar, se conserva la correspondencia con mayor coincidencia.</p></div>
+        <p class="slide-number" aria-hidden="true">12</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-reassembly" data-section="Inferencia" aria-labelledby="title-reassembly">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Rearmado del audio completo</p>
+          <h2 id="title-reassembly">Segmentar para la red; concatenar para K-means</h2>
+          <p>La BLSTM trabaja en bloques fijos. La agrupación, en cambio, debe ver todos los bins reales del audio en su orden original.</p>
+        </div>
+        <div class="reassembly-demo animated-sequence" id="reassembly-sequence">
+          <article class="reassembly-step sequence-step" style="--delay:.05s"><span>1 · Por segmento</span><div class="embedding-slabs"><i>V₁</i><i>V₂</i><i>…</i><i class="padded">Vₛ <b>padding</b></i></div><strong>cada V<sub>s</sub> ∈ ℝ<sup>100×129×40</sup></strong></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>recortar</small></span>
+          <article class="reassembly-step sequence-step" style="--delay:.35s"><span>2 · Quitar padding</span><div class="trim-demo"><i></i><i></i><i></i><b></b></div><strong>solo frames reales</strong></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>concatenar</small></span>
+          <article class="reassembly-step sequence-step" style="--delay:.65s"><span>3 · Audio completo</span><div class="full-tensor" aria-hidden="true"><i></i><i></i><i></i></div><strong>V<sub>full</sub> ∈ ℝ<sup>T×129×40</sup></strong></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>flatten</small></span>
+          <article class="reassembly-step sequence-step" style="--delay:.95s"><span>4 · Puntos para K-means</span><div class="rows-mini"><i></i><i></i><i></i><i></i></div><strong>V<sub>flat</sub> ∈ ℝ<sup>(T·129)×40</sup></strong></article>
+        </div>
+        <div class="inverse-reshape"><span>K-means</span><strong>[T · 129] etiquetas</strong><i>→ reshape →</i><strong>C ∈ {0,1}<sup>T×129</sup></strong><p>El mapa C recupera exactamente las coordenadas de tiempo y frecuencia porque flatten usó un orden conocido.</p></div>
+        <div class="teaching-footer"><p><strong>Rearmar no significa reconstruir audio todavía:</strong> primero recuperamos el mapa de clusters; después se crean las máscaras y se aplica ISTFT.</p><button class="replay-button" type="button" data-replay="#reassembly-sequence">↻ Repetir rearmado</button></div>
+        <p class="slide-number" aria-hidden="true">23</p>
+      </section>
+
+      <section class="slide" id="slide-13" data-section="Reconstrucción" aria-labelledby="title-13">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Máscaras binarias obtenidas en inferencia</p>
+          <h2 id="title-13">Cada bin queda en exactamente una de las dos salidas</h2>
+          <p>Las máscaras estimadas son complementarias: las zonas blancas de un cluster corresponden a zonas negras del otro.</p>
+        </div>
+        <div class="mask-image-layout">
+          <button class="image-frame image-frame--masks" type="button" data-lightbox="assets/img/mascaras-binarias.png" aria-label="Ampliar máscaras binarias estimadas">
+            <img src="assets/img/mascaras-binarias.png" alt="Dos máscaras binarias estimadas, una para el cluster 0 y otra para el cluster 1, representadas por frame y bin de frecuencia.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="mask-explanation">
+            <article><span>Selección espectral</span><div class="formula"><span>Ŝ<sub>k</sub>(t,f)</span><span>=</span><span>M<sub>k</sub>(t,f) · X(t,f)</span></div><p>La máscara multiplica la STFT compleja, por lo que conserva la fase de la mezcla.</p></article>
+            <article><span>Reconstrucción</span><div class="formula"><span>ŝ<sub>k</sub>(t)</span><span>=</span><span>ISTFT(Ŝ<sub>k</sub>)</span></div><p>La red decide pertenencia; ISTFT transforma los bins seleccionados en audio.</p></article>
+            <div class="binary-rule"><b>1</b><p>el bin se conserva</p><b>0</b><p>el bin se elimina</p></div>
+          </div>
+        </div>
+        <aside class="takeaway"><span>Límite binario</span><p>Un error no duplica el mismo bin: lo quita de una salida y lo transfiere al cluster contrario.</p></aside>
+        <p class="slide-number" aria-hidden="true">13</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-mask-matching" data-section="Evaluación" aria-labelledby="title-mask-matching">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Correspondencia y porcentaje de bins correctos</p>
+          <h2 id="title-mask-matching">Cluster 0 no significa automáticamente fuente 1</h2>
+          <p>K-means usa etiquetas arbitrarias. Antes de evaluar se prueban las dos correspondencias posibles y se conserva la que produce más coincidencias.</p>
+        </div>
+        <div class="permutation-compare">
+          <article class="mapping-card"><span>Correspondencia A</span><div><b>Cluster 0</b><i>→</i><strong>s1 ideal</strong></div><div><b>Cluster 1</b><i>→</i><strong>s2 ideal</strong></div><small>acierto A</small></article>
+          <div class="or-badge">o</div>
+          <article class="mapping-card mapping-card--cross"><span>Correspondencia B</span><div><b>Cluster 0</b><i>↘</i><strong>s2 ideal</strong></div><div><b>Cluster 1</b><i>↗</i><strong>s1 ideal</strong></div><small>acierto B</small></article>
+          <div class="max-rule"><span>Se conserva</span><strong>max(acierto A, acierto B)</strong><p>El cruce no es un fallo: solo cambia el nombre de las salidas.</p></div>
+        </div>
+        <div class="bin-accuracy-example">
+          <div class="mask-vector"><span>Ideal</span><b>1</b><b>1</b><b>0</b><b>1</b><b>1</b><b>0</b></div>
+          <div class="mask-vector mask-vector--estimated"><span>Estimada</span><b class="ok">1</b><b class="ok">1</b><b class="ok">0</b><b class="bad">0</b><b class="bad">0</b><b class="ok">0</b></div>
+          <div class="accuracy-marks"><span></span><b>✓</b><b>✓</b><b>✓</b><b>✗</b><b>✗</b><b>✓</b></div>
+          <div class="formula formula--accuracy"><span>% bins correctos</span><span>=</span><span class="frac"><span>4 coincidencias</span><span>6 bins</span></span><span>= 66,7 %</span></div>
+        </div>
+        <div class="teaching-footer"><p><strong>Qué mide:</strong> semejanza de la partición estimada con la máscara ideal; complementa a SI-SDR, que mide la calidad del audio reconstruido.</p></div>
+        <p class="slide-number" aria-hidden="true">31</p>
+      </section>
+
+      <section class="slide" id="slide-14" data-section="Demostración" aria-labelledby="title-14">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Laboratorio de escucha</p>
+          <h2 id="title-14">Compara referencias y estimaciones</h2>
+          <p>Solo un audio puede reproducirse a la vez. Escucha primero la mezcla y después cada par.</p>
+        </div>
+        <div class="audio-lab">
+          <article class="audio-track audio-track--mix" data-audio-player>
+            <div class="track-identity"><span>Entrada</span><strong>Mezcla</strong><small>Dos voces superpuestas</small></div>
+            <button class="play-button" type="button" aria-label="Reproducir mezcla">▶</button>
+            <div class="audio-progress" role="slider" aria-label="Posición de la mezcla" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div><time>0:00</time>
+            <audio preload="metadata" src="assets/audio/caso-mix.wav"></audio>
+          </article>
+          <div class="audio-pair-label"><span>Fuente 1</span><small>real frente a estimada</small></div>
+          <article class="audio-track audio-track--real" data-audio-player><div class="track-identity"><span>Referencia</span><strong>s1 real</strong><small>Objetivo esperado</small></div><button class="play-button" type="button" aria-label="Reproducir fuente 1 real">▶</button><div class="audio-progress" role="slider" aria-label="Posición de fuente 1 real" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div><time>0:00</time><audio preload="metadata" src="assets/audio/caso-s1-real.wav"></audio></article>
+          <article class="audio-track audio-track--estimated" data-audio-player><div class="track-identity"><span>Modelo</span><strong>ŝ1 estimada</strong><small>Salida de Deep Clustering</small></div><button class="play-button" type="button" aria-label="Reproducir fuente 1 estimada">▶</button><div class="audio-progress" role="slider" aria-label="Posición de fuente 1 estimada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div><time>0:00</time><audio preload="metadata" src="assets/audio/caso-s1-estimada.wav"></audio></article>
+          <div class="audio-pair-label"><span>Fuente 2</span><small>real frente a estimada</small></div>
+          <article class="audio-track audio-track--real" data-audio-player><div class="track-identity"><span>Referencia</span><strong>s2 real</strong><small>Objetivo esperado</small></div><button class="play-button" type="button" aria-label="Reproducir fuente 2 real">▶</button><div class="audio-progress" role="slider" aria-label="Posición de fuente 2 real" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div><time>0:00</time><audio preload="metadata" src="assets/audio/caso-s2-real.wav"></audio></article>
+          <article class="audio-track audio-track--estimated" data-audio-player><div class="track-identity"><span>Modelo</span><strong>ŝ2 estimada</strong><small>Salida de Deep Clustering</small></div><button class="play-button" type="button" aria-label="Reproducir fuente 2 estimada">▶</button><div class="audio-progress" role="slider" aria-label="Posición de fuente 2 estimada" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" tabindex="0"><span></span></div><time>0:00</time><audio preload="metadata" src="assets/audio/caso-s2-estimada.wav"></audio></article>
+        </div>
+        <p class="slide-number" aria-hidden="true">14</p>
+      </section>
+
+      <section class="slide" id="slide-15" data-section="Demostración" aria-labelledby="title-15">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Lectura espectral</p>
+          <h2 id="title-15">La estructura se conserva, pero aparecen fugas</h2>
+        </div>
+        <div class="comparison-controls" role="group" aria-label="Seleccionar fuente para comparar">
+          <button class="is-selected" type="button" data-source="s1">Fuente 1</button>
+          <button type="button" data-source="s2">Fuente 2</button>
+        </div>
+        <div class="spectrum-comparison" data-comparison>
+          <article><div class="comparison-label"><span>Referencia real</span><strong id="real-label">s1</strong></div><button class="image-frame" type="button" data-lightbox="assets/img/caso-s1-real.png"><img id="real-spectrum" src="assets/img/caso-s1-real.png" alt="Espectrograma de la fuente 1 real."><span class="image-frame__zoom" aria-hidden="true">＋</span></button></article>
+          <div class="comparison-divider"><span>vs.</span></div>
+          <article><div class="comparison-label"><span>Salida del modelo</span><strong id="estimated-label">ŝ1</strong></div><button class="image-frame" type="button" data-lightbox="assets/img/caso-s1-estimada.png"><img id="estimated-spectrum" src="assets/img/caso-s1-estimada.png" alt="Espectrograma de la fuente 1 estimada."><span class="image-frame__zoom" aria-hidden="true">＋</span></button></article>
+        </div>
+        <div class="residual-note"><span aria-hidden="true">≈</span><p><strong>Interferencia residual:</strong> algunos bins de una voz pasan al cluster contrario; otros desaparecen de su estimación.</p></div>
+        <p class="slide-number" aria-hidden="true">15</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-sisdr-intuition" data-section="Evaluación" aria-labelledby="title-sisdr-intuition">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>De SDR a SI-SDR</p>
+          <h2 id="title-sisdr-intuition">Primero medimos distorsión; luego quitamos el efecto del volumen</h2>
+          <p>Ambas métricas comparan energía útil contra error. SI-SDR añade una alineación de escala para no penalizar una ganancia global distinta.</p>
+        </div>
+        <div class="metric-transition animated-sequence" id="sdr-transition-sequence">
+          <article class="metric-card sequence-step" style="--delay:.05s"><span>1 · SDR simplificado</span><div class="formula formula--metric"><span>SDR</span><span>=</span><span>10 log<sub>10</sub></span><span class="frac"><span>‖s‖<sup>2</sup></span><span>‖s − ŝ‖<sup>2</sup></span></span></div><p>Compara la referencia completa con el error directo entre referencia y estimación.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>problema de escala</small></span>
+          <article class="gain-example sequence-step" style="--delay:.3s"><span>Misma forma, distinto volumen</span><div class="signal-gain"><b>s</b><i></i><b>ŝ = 0,5s</b><i class="half"></i></div><p>El error s−ŝ no es cero, aunque la forma sea correcta. SDR penaliza la diferencia de ganancia.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>alinear primero</small></span>
+          <article class="metric-card metric-card--si sequence-step" style="--delay:.6s"><span>2 · SI-SDR</span><div class="formula formula--metric"><span>α</span><span>=</span><span class="frac"><span>⟨ŝ,s⟩</span><span>‖s‖<sup>2</sup>+ε</span></span></div><div class="formula formula--metric formula--secondary"><span>s<sub>objetivo</sub></span><span>=</span><span>αs</span><i>;</i><span>e</span><span>=</span><span>ŝ−αs</span></div><p>Primero busca el volumen de s que mejor coincide con ŝ; después mide solo el residuo.</p></article>
+        </div>
+        <div class="formula formula--sisdr-final"><span>SI-SDR</span><span>=</span><span>10 log<sub>10</sub></span><span class="frac"><span>‖s<sub>objetivo</sub>‖<sup>2</sup> + ε</span><span>‖e‖<sup>2</sup> + ε</span></span></div>
+        <div class="plain-language"><strong>“Scale-invariant”</strong><p>Si ŝ conserva la forma de s pero cambia solo su volumen, α absorbe esa diferencia; el error residual se concentra en distorsión e interferencia.</p></div>
+        <div class="teaching-footer"><p><strong>Interpretación:</strong> más energía explicada y menos energía residual producen un SI-SDR mayor.</p><button class="replay-button" type="button" data-replay="#sdr-transition-sequence">↻ Repetir transición</button></div>
+        <p class="slide-number" aria-hidden="true">27</p>
+      </section>
+
+      <section class="slide slide--teaching" id="slide-sisdr-math" data-section="Evaluación" aria-labelledby="title-sisdr-math">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Cómo se obtiene la mejora</p>
+          <h2 id="title-sisdr-math">La mejora resta el punto de partida de la mezcla</h2>
+          <p>Un SI-SDR final puede parecer bueno o malo sin contexto. Por eso cada fuente se mide antes y después de separar.</p>
+        </div>
+        <div class="improvement-steps animated-sequence" id="sisdr-math-sequence">
+          <article class="sequence-step" style="--delay:.05s"><span>1 · Antes</span><div class="formula"><span>SI-SDR<sub>mix,i</sub></span><span>=</span><span>SI-SDR(s<sub>i</sub>, x)</span></div><p>Desde la perspectiva de s<sub>i</sub>, la otra voz incluida en x es interferencia.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>Deep Clustering</small></span>
+          <article class="sequence-step" style="--delay:.35s"><span>2 · Después</span><div class="formula"><span>SI-SDR<sub>sep,i</sub></span><span>=</span><span>SI-SDR(s<sub>i</sub>, ŝ<sub>i</sub>)</span></div><p>La referencia se compara con la salida cuya correspondencia fue resuelta.</p></article>
+          <span class="sequence-arrow" aria-hidden="true">→<small>restar</small></span>
+          <article class="sequence-step improvement-result" style="--delay:.65s"><span>3 · Mejora</span><div class="formula"><span>ΔSI-SDR<sub>i</sub></span><span>=</span><span>SI-SDR<sub>sep,i</sub> − SI-SDR<sub>mix,i</sub></span></div><p>Positivo significa que separar fue mejor que usar directamente la mezcla.</p></article>
+        </div>
+        <div class="sisdr-example">
+          <p class="micro-label">Ejemplo del documento</p>
+          <div><span>Antes</span><strong>SI-SDR<sub>mezcla</sub> = 0,5 dB</strong></div><i>→</i><div><span>Después</span><strong>SI-SDR<sub>separado</sub> = 5,5 dB</strong></div><i>=</i><div class="sisdr-gain"><span>Mejora</span><strong>ΔSI-SDR = +5,0 dB</strong></div>
+        </div>
+        <div class="global-improvement"><span>Dos fuentes</span><div class="formula"><span>ΔSI-SDR</span><span>=</span><span class="frac"><span>ΔSI-SDR<sub>1</sub> + ΔSI-SDR<sub>2</sub></span><span>2</span></span></div><p>El resultado por mezcla promedia ambas fuentes después de resolver la permutación.</p></div>
+        <div class="teaching-footer"><p><strong>Qué significa el ejemplo:</strong> la fuente separada tiene una relación señal-error 5 dB mejor que la misma fuente observada dentro de la mezcla.</p><button class="replay-button" type="button" data-replay="#sisdr-math-sequence">↻ Repetir cálculo</button></div>
+        <p class="slide-number" aria-hidden="true">28</p>
+      </section>
+
+      <section class="slide" id="slide-16" data-section="Evaluación" aria-labelledby="title-16">
+        <div class="slide-heading slide-heading--center">
+          <p class="eyebrow"><span></span>Dos preguntas complementarias</p>
+          <h2 id="title-16">¿Suena mejor y agrupa correctamente?</h2>
+        </div>
+        <div class="evaluation-split">
+          <article class="metric-explainer metric-explainer--cyan">
+            <span class="metric-icon">dB</span>
+            <p class="micro-label">Calidad de señal</p>
+            <h3>Mejora de SI-SDR</h3>
+            <div class="metric-formula">SI-SDR<sub>separado</sub> − SI-SDR<sub>mezcla</sub></div>
+            <p>Un valor positivo indica que las salidas se parecen más a las fuentes reales que la mezcla original.</p>
+            <small>Invariante ante una ganancia global.</small>
+          </article>
+          <article class="metric-explainer metric-explainer--coral">
+            <span class="metric-icon">%</span>
+            <p class="micro-label">Calidad del clustering</p>
+            <h3>Coincidencia de máscara</h3>
+            <div class="mask-example" aria-label="Ejemplo de coincidencia de cuatro de seis bins"><i class="ok">✓</i><i class="ok">✓</i><i class="ok">✓</i><i>×</i><i class="ok">✓</i><i>×</i><strong>4 / 6 = 66,7 %</strong></div>
+            <p>Compara la asignación de K-means con la fuente dominante real en cada bin.</p>
+            <small>Se evalúan las dos posibles permutaciones.</small>
+          </article>
+        </div>
+        <aside class="takeaway"><span>Lectura conjunta</span><p>La máscara explica el mecanismo; SI-SDR mide el resultado audible de la reconstrucción.</p></aside>
+        <p class="slide-number" aria-hidden="true">16</p>
+      </section>
+
+      <section class="slide" id="slide-17" data-section="Resultados" aria-labelledby="title-17">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Evaluación sobre 2 402 mezclas</p>
+          <h2 id="title-17">La mejora media es positiva, con alta variabilidad</h2>
+        </div>
+        <div class="results-layout">
+          <button class="image-frame image-frame--results" type="button" data-lightbox="assets/img/distribuciones-validacion-test.png" aria-label="Ampliar distribuciones de validación y test">
+            <img src="assets/img/distribuciones-validacion-test.png" alt="Histogramas de mejora SI-SDR, SI-SDR separado y coincidencia de máscara en validación y test.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="kpi-column">
+            <article><span>+2,76</span><strong>dB</strong><p>mejora media</p></article>
+            <article><span>65,70</span><strong>%</strong><p>casos con mejora positiva</p></article>
+            <article><span>57,06</span><strong>%</strong><p>coincidencia media</p></article>
+            <p class="variance-warning"><i aria-hidden="true">!</i>La desviación de la mejora es 5,10 dB. El comportamiento no es uniforme.</p>
+          </div>
+        </div>
+        <p class="slide-number" aria-hidden="true">17</p>
+      </section>
+
+      <section class="slide" id="slide-18" data-section="Resultados" aria-labelledby="title-18">
+        <div class="slide-heading slide-heading--compact">
+          <p class="eyebrow"><span></span>Relación clustering-separación</p>
+          <h2 id="title-18">Mejor clustering suele producir mejor separación</h2>
+          <p>La correlación de 0,7827 conecta la calidad de la máscara con la mejora de SI-SDR.</p>
+        </div>
+        <div class="final-layout">
+          <button class="image-frame image-frame--scatter" type="button" data-lightbox="assets/img/clustering-vs-mejora.png" aria-label="Ampliar relación entre clustering y mejora de separación">
+            <img src="assets/img/clustering-vs-mejora.png" alt="Gráfico de dispersión entre coincidencia con la máscara ideal y mejora de SI-SDR, con correlación positiva.">
+            <span class="image-frame__zoom" aria-hidden="true">＋</span>
+          </button>
+          <div class="threshold-explorer" data-threshold-explorer>
+            <p class="micro-label">Explora el compromiso</p>
+            <div class="threshold-buttons" role="group" aria-label="Umbral de coincidencia"><button class="is-selected" type="button" data-threshold="55">≥ 55 %</button><button type="button" data-threshold="60">≥ 60 %</button><button type="button" data-threshold="65">≥ 65 %</button></div>
+            <div class="threshold-result">
+              <article><span id="coverage-value">60,99 %</span><p>cobertura del test</p></article>
+              <article><span id="improvement-value">5,70 dB</span><p>mejora media</p></article>
+              <article><span id="positive-value">92,01 %</span><p>casos positivos</p></article>
+            </div>
+            <p id="threshold-note">Conserva 1 465 mezclas. El umbral es una referencia empírica, no una garantía universal.</p>
+          </div>
+        </div>
+        <div class="closing-line"><strong>La coincidencia es informativa, no absoluta:</strong><span>una máscara mejor suele producir mejor audio, pero no explica toda la variabilidad.</span></div>
+        <p class="slide-number" aria-hidden="true">18</p>
+      </section>
+
+      <section class="slide slide--final" id="slide-conclusions" data-section="Conclusiones" aria-labelledby="title-conclusions">
+        <div class="slide-heading">
+          <p class="eyebrow"><span></span>Conclusiones</p>
+          <h2 id="title-conclusions">La representación aprendida funciona, pero la estabilidad aún puede mejorar</h2>
+        </div>
+        <div class="conclusion-grid">
+          <article><span>01</span><strong>Dataset reproducible</strong><p>Spanish-2Mix aporta 20 787 mezclas sintéticas, fuentes alineadas, SNR controlada y partición por hablante.</p></article>
+          <article><span>02</span><strong>Flujo completo replicado</strong><p>STFT → BLSTM → embeddings → K-means → máscaras → ISTFT reproduce la idea central de Hershey et al.</p></article>
+          <article><span>03</span><strong>Mejora global positiva</strong><p>La evaluación sobre 2 402 mezclas obtuvo +2,7586 dB de mejora media y 65,70 % de casos positivos.</p></article>
+          <article><span>04</span><strong>Clustering decisivo</strong><p>La correlación 0,7827 confirma que la calidad de la máscara está fuertemente relacionada con la separación.</p></article>
+          <article><span>05</span><strong>Limitación principal</strong><p>La alta variabilidad refleja el menor volumen y diversidad del dataset, además de errores binarios que transfieren energía entre salidas.</p></article>
+        </div>
+        <div class="next-work"><span>Siguientes pasos</span><p>Más voces y horas · entrenamiento más largo · máscaras suaves · pérdidas híbridas · comparación SDR/SI-SDR bajo un protocolo común.</p></div>
+        <div class="final-signoff"><strong>Milton Alejandro Villarroel Garvizu</strong><span>Aprendizaje de Representaciones Acústicas para la Agrupación y Reconstrucción de Sonido</span></div>
+        <p class="slide-number" aria-hidden="true">39</p>
+      </section>
+    </main>
+
+    <footer class="deck-controls" aria-label="Controles de navegación">
+      <button id="previous-button" class="nav-button" type="button" aria-label="Diapositiva anterior">←</button>
+      <div class="progress-wrap">
+        <div class="progress-meta"><span id="slide-counter">01 / 39</span><span id="slide-title">Aprendizaje de representaciones acústicas</span></div>
+        <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+      </div>
+      <button id="next-button" class="nav-button" type="button" aria-label="Diapositiva siguiente">→</button>
+    </footer>
+  </div>
+
+  <dialog id="help-dialog" class="dialog dialog--help">
+    <button class="dialog__close" type="button" data-close-dialog aria-label="Cerrar ayuda">×</button>
+    <p class="eyebrow"><span></span>Navegación</p>
+    <h2>Controla la presentación</h2>
+    <div class="shortcut-grid"><kbd>→</kbd><span>Avanzar</span><kbd>←</kbd><span>Retroceder</span><kbd>Espacio</kbd><span>Avanzar</span><kbd>F</kbd><span>Pantalla completa</span><kbd>T</kbd><span>Alternar tema claro u oscuro</span><kbd>Home</kbd><span>Primera diapositiva</span><kbd>End</kbd><span>Última diapositiva</span><kbd>+ / −</kbd><span>Zoom dentro del visor de imágenes</span><kbd>0</kbd><span>Restablecer zoom al 100 %</span><kbd>Arrastrar</kbd><span>Moverse dentro de una imagen ampliada</span></div>
+  </dialog>
+
+  <dialog id="lightbox-dialog" class="dialog dialog--lightbox">
+    <button class="dialog__close" type="button" data-close-dialog aria-label="Cerrar imagen ampliada">×</button>
+    <div class="lightbox-toolbar" aria-label="Controles de ampliación">
+      <button type="button" data-zoom-out aria-label="Alejar imagen">−</button>
+      <output id="zoom-label" aria-live="polite">100 %</output>
+      <button type="button" data-zoom-in aria-label="Acercar imagen">＋</button>
+      <button type="button" data-zoom-reset>Restablecer</button>
+      <span class="lightbox-pan-hint" id="pan-hint" hidden>Arrastra la imagen para desplazarte</span>
+    </div>
+    <div class="lightbox-viewport" id="lightbox-viewport"><img id="lightbox-image" src="" alt="Imagen ampliada"></div>
+  </dialog>
+
+  <noscript><div class="noscript">Activa JavaScript para utilizar la navegación y las interacciones. El contenido permanece disponible al imprimir la página.</div></noscript>
+</body>
+</html>
